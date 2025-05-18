@@ -26,7 +26,7 @@ pipeline {
 
         stage('Push to Docker Hub') {
     steps {
-        withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+        withCredentials([usernamePassword(credentialsId: 'dockerhub-cred', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
             bat '''
             docker login -u %USERNAME% -p %PASSWORD%
             docker push supriya/portfolio:latest
