@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Clone repository') {
             steps {
-                git 'https://github.com/1DS22CS222-SUPRIYA/portfolio.git'
+                git url: 'https://github.com/1DS22CS222-SUPRIYA/portfolio.git', branch: 'main'
             }
         }
 
