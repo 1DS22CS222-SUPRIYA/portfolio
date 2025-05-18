@@ -13,13 +13,15 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    docker.build("${IMAGE_NAME}:latest")
-                }
+        stage('Push Image') {
+    steps {
+        script {
+            docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-creds') {
+                docker.image("${IMAGE_NAME}:latest").push()
             }
         }
+    }
+}
 
         stage('Docker Login') {
             steps {
