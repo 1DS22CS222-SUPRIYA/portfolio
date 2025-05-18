@@ -8,31 +8,33 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git url: 'https://github.com/1DS22CS222-SUPRIYA/portfolio.git', branch: 'main', credentialsId: 'dockerhub-creds'
+                git url: 'https://github.com/1DS22CS222-SUPRIYA/portfolio.git', branch: 'main'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t %DOCKER_IMAGE% .'
+                bat "docker build -t %DOCKER_IMAGE% ."
             }
         }
 
         stage('Push to Docker Hub') {
-    steps {
-        timeout(time: 5, unit: 'MINUTES') {
-            withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                bat 'echo %PASSWORD% | docker login -u %USERNAME% --password-stdin'
-                bat 'docker push manvisupriya/portfolio-website:latest'
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        bat """
+                        echo %PASSWORD% | docker login -u %USERNAME% --password-stdin
+                        docker push %DOCKER_IMAGE%
+                        """
+                    }
+                }
             }
         }
-    }
-}
 
         stage('Deploy to Kubernetes') {
             steps {
-                bat 'kubectl apply -f deployment.yaml'
-                bat 'kubectl apply -f service.yaml'
+                bat "kubectl apply -f deployment.yaml"
+                bat "kubectl apply -f service.yaml"
             }
         }
     }
