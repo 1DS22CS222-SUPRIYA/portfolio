@@ -37,13 +37,15 @@ pipeline {
                 bat "kubectl apply -f service.yaml"
             }
         }
+
+        // ✅ If you want to run a container locally, include it here INSIDE stages
+        stage('Run Docker Container') {
+            steps {
+                bat "docker run -d -p 80:80 %DOCKER_IMAGE%"
+            }
+        }
     }
-stage('Run Docker Container') {
-    steps {
-        bat 'docker rm -f portfolio || true'
-        bat 'docker run -d -p 3000:3000 --name portfolio supriya/portfolio'
-    }
-}
+
     post {
         always {
             echo 'Pipeline completed.'
