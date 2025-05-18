@@ -22,7 +22,7 @@ pipeline {
 
         stage('Push to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                     bat 'docker login -u %USERNAME% -p %PASSWORD%'
                     bat 'docker tag supriya/portfolio %USERNAME%/portfolio'
                     bat 'docker push %USERNAME%/portfolio'
