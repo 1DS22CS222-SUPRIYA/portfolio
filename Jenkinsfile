@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/1DS22CS222-SUPRIYA/portfolio.git', credentialsId: 'github-token'
+                git url: 'https://github.com/1DS22CS222-SUPRIYA/portfolio.git', credentialsId: 'github-token',branch:'main'
             }
         }
 
