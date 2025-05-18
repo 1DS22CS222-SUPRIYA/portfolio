@@ -1,46 +1,53 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKERHUB_CREDENTIALS = 'dockerhub-creds'  // Your Jenkins DockerHub credentials id
+        IMAGE_NAME = 'manvisupriya/portfolio'
+        IMAGE_TAG = 'latest'
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                // Checkout your GitHub repo
-                git url: 'https://github.com/1DS22CS222-SUPRIYA/portfolio.git', credentialsId: 'github-token', branch: 'main'
+                git url: 'https://github.com/1DS22CS222-SUPRIYA/portfolio.git', credentialsId: 'github-token'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build Docker image with your Docker Hub repo name and tag
-                    bat 'docker build -t manvisupriya/portfolio:latest .'
+                    docker.build("${env.IMAGE_NAME}:${env.IMAGE_TAG}")
                 }
             }
         }
 
-        stage('Login to Docker Hub') {
+        stage('Docker Login') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
-                    bat '''
-                        docker logout
-                        docker login -u %DOCKERHUB_USERNAME% -p %DOCKERHUB_PASSWORD%
-                    '''
+                withCredentials([usernamePassword(credentialsId: env.DOCKERHUB_CREDENTIALS, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    sh "echo $PASSWORD | docker login -u $USERNAME --password-stdin"
                 }
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                bat 'docker push manvisupriya/portfolio:latest'
+                script {
+                    docker.image("${env.IMAGE_NAME}:${env.IMAGE_TAG}").push()
+                }
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Cleanup') {
             steps {
-                // Add your kubectl commands here for deployment
-                // Example:
-                bat 'kubectl apply -f k8s-deployment.yaml'
+                sh "docker rmi ${env.IMAGE_NAME}:${env.IMAGE_TAG}"
             }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker logout'
         }
     }
 }
