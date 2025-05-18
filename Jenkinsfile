@@ -19,15 +19,15 @@ pipeline {
         }
 
         stage('Push to Docker Hub') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    bat '''
-                    echo %PASSWORD% | docker login -u %USERNAME% --password-stdin
-                    docker push %DOCKER_IMAGE%
-                    '''
-                }
+    steps {
+        timeout(time: 5, unit: 'MINUTES') {
+            withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                bat 'echo %PASSWORD% | docker login -u %USERNAME% --password-stdin'
+                bat 'docker push manvisupriya/portfolio-website:latest'
             }
         }
+    }
+}
 
         stage('Deploy to Kubernetes') {
             steps {
