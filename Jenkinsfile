@@ -1,41 +1,45 @@
 pipeline {
     agent any
 
-    environment {
-        IMAGE_NAME = 'manvisupriya/portfolio:latest'
-    }
-
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/1DS22CS222-SUPRIYA/portfolio.git', branch: 'main'
+                // Checkout your GitHub repo
+                git url: 'https://github.com/1DS22CS222-SUPRIYA/portfolio.git', credentialsId: 'github-token', branch: 'main'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                bat "docker build -t ${IMAGE_NAME} ."
+                script {
+                    // Build Docker image with your Docker Hub repo name and tag
+                    bat 'docker build -t manvisupriya/portfolio:latest .'
+                }
             }
         }
 
         stage('Login to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub_creds', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                    bat 'echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                    bat '''
+                        docker logout
+                        docker login -u %DOCKERHUB_USERNAME% -p %DOCKERHUB_PASSWORD%
+                    '''
                 }
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                bat "docker push ${IMAGE_NAME}"
+                bat 'docker push manvisupriya/portfolio:latest'
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                bat 'kubectl apply -f k8s/deployment.yaml'
-                bat 'kubectl apply -f k8s/service.yaml'
+                // Add your kubectl commands here for deployment
+                // Example:
+                bat 'kubectl apply -f k8s-deployment.yaml'
             }
         }
     }
