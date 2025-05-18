@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') // Jenkins credentials ID
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds') // Jenkins credentials ID
         IMAGE_NAME = "manvisupriya/portfolio"
         KUBE_CONFIG = credentials('kubeconfig') // optional, if using kubeconfig in Jenkins
     }
@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/yourusername/yourrepo.git'  // replace with your repo URL
+                git 'https://github.com/1DS22CS222-SUPRIYA/portfolio.git',branch 'main'  // replace with your repo URL
             }
         }
 
