@@ -1,36 +1,40 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE = 'manvisupriya/portfolio-website:latest'
-    }
-
     stages {
-        stage('Clone Repository') {
+        stage('Clone repository') {
             steps {
-                git url: 'https://github.com/1DS22CS222-SUPRIYA/portfolio.git', branch: 'main', credentialsId: 'github-token'
+                git 'https://github.com/Supriyamanvi/DevOps-Portfolio-Project.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE .'
+                bat 'docker build -t supriya/portfolio .'
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                bat 'docker run -d -p 3000:3000 --name portfolio supriya/portfolio'
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
-                    sh 'docker push $DOCKER_IMAGE'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    bat 'docker login -u %USERNAME% -p %PASSWORD%'
+                    bat 'docker tag supriya/portfolio %USERNAME%/portfolio'
+                    bat 'docker push %USERNAME%/portfolio'
                 }
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Clean Up') {
             steps {
-                sh 'kubectl apply -f deployment.yaml'
-                sh 'kubectl apply -f service.yaml'
+                bat 'docker stop portfolio'
+                bat 'docker rm portfolio'
+                bat 'docker rmi supriya/portfolio'
             }
         }
     }
