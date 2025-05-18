@@ -2,15 +2,14 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds') // Jenkins credentials ID
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
         IMAGE_NAME = "manvisupriya/portfolio"
-        KUBE_CONFIG = credentials('kubeconfig') // optional, if using kubeconfig in Jenkins
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/1DS22CS222-SUPRIYA/portfolio.git',branch 'main'  // replace with your repo URL
+                git url: 'https://github.com/1DS22CS222-SUPRIYA/portfolio.git', branch: 'main'
             }
         }
 
@@ -25,8 +24,8 @@ pipeline {
         stage('Docker Login') {
             steps {
                 script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-credentials') {
-                        // login done automatically by withRegistry
+                    docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-creds') {
+                        // login done automatically here
                     }
                 }
             }
@@ -42,7 +41,6 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                // Apply your kubernetes deployment and service manifests
                 sh 'kubectl apply -f deployment.yaml'
                 sh 'kubectl apply -f service.yaml'
             }
