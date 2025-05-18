@@ -2,59 +2,50 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'manvisupriya/portfolio-website:latest'
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') // Jenkins credentials ID
+        IMAGE_NAME = "manvisupriya/portfolio"
+        KUBE_CONFIG = credentials('kubeconfig') // optional, if using kubeconfig in Jenkins
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Checkout') {
             steps {
-                git url: 'https://github.com/1DS22CS222-SUPRIYA/portfolio.git', branch: 'main'
+                git 'https://github.com/yourusername/yourrepo.git'  // replace with your repo URL
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                bat "docker build -t %DOCKER_IMAGE% ."
+                script {
+                    docker.build("${IMAGE_NAME}:latest")
+                }
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Docker Login') {
             steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        bat """
-                        echo %PASSWORD% | docker login -u %USERNAME% --password-stdin
-                        docker push %DOCKER_IMAGE%
-                        """
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-credentials') {
+                        // login done automatically by withRegistry
                     }
+                }
+            }
+        }
+
+        stage('Push Image') {
+            steps {
+                script {
+                    docker.image("${IMAGE_NAME}:latest").push()
                 }
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                bat "kubectl apply -f deployment.yaml"
-                bat "kubectl apply -f service.yaml"
+                // Apply your kubernetes deployment and service manifests
+                sh 'kubectl apply -f deployment.yaml'
+                sh 'kubectl apply -f service.yaml'
             }
-        }
-
-        // ✅ If you want to run a container locally, include it here INSIDE stages
-        stage('Run Docker Container') {
-            steps {
-                bat "docker run -d -p 80:80 %DOCKER_IMAGE%"
-            }
-        }
-    }
-
-    post {
-        always {
-            echo 'Pipeline completed.'
-        }
-        success {
-            echo 'Deployment successful!'
-        }
-        failure {
-            echo 'Pipeline failed.'
         }
     }
 }
