@@ -38,7 +38,12 @@ pipeline {
             }
         }
     }
-
+stage('Run Docker Container') {
+    steps {
+        bat 'docker rm -f portfolio || true'
+        bat 'docker run -d -p 3000:3000 --name portfolio supriya/portfolio'
+    }
+}
     post {
         always {
             echo 'Pipeline completed.'
