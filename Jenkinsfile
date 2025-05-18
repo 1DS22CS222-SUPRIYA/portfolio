@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "manvisupriya/portfolio"
+        DOCKER_IMAGE = 'manvisupriya/portfolio:latest'
+        KUBE_CONFIG = 'C:\\Users\\YourUsername\\.kube\\config' // Update this path
     }
 
     stages {
@@ -14,32 +15,30 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build("${IMAGE_NAME}:latest")
-                }
+                bat 'docker build -t %DOCKER_IMAGE% .'
             }
         }
 
         stage('Login to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    bat 'docker login -u %DOCKER_USER% -p %DOCKER_PASS%'
                 }
             }
         }
 
-        stage('Push Image') {
+        stage('Push Docker Image') {
             steps {
-                script {
-                    docker.image("${IMAGE_NAME}:latest").push()
-                }
+                bat 'docker push %DOCKER_IMAGE%'
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh 'kubectl apply -f deployment.yaml'
-                sh 'kubectl apply -f service.yaml'
+                withEnv(["KUBECONFIG=${env.KUBE_CONFIG}"]) {
+                    bat 'kubectl apply -f k8s-deployment.yaml'
+                    bat 'kubectl apply -f k8s-service.yaml'
+                }
             }
         }
     }
