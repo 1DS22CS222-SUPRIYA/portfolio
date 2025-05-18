@@ -15,20 +15,25 @@ pipeline {
         }
 
         stage('Run Docker Container') {
-            steps {
-                bat 'docker run -d -p 3000:3000 --name portfolio supriya/portfolio'
-            }
-        }
+    steps {
+        bat '''
+        docker rm -f portfolio || echo "No existing container to remove"
+        docker run -d -p 3000:3000 --name portfolio supriya/portfolio
+        '''
+    }
+}
+
 
         stage('Push to Docker Hub') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    bat 'docker login -u %USERNAME% -p %PASSWORD%'
-                    bat 'docker tag supriya/portfolio %USERNAME%/portfolio'
-                    bat 'docker push %USERNAME%/portfolio'
-                }
-            }
+    steps {
+        withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+            bat '''
+            docker login -u %USERNAME% -p %PASSWORD%
+            docker push supriya/portfolio:latest
+            '''
         }
+    }
+}
 
         stage('Clean Up') {
             steps {
