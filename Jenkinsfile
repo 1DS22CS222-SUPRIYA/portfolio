@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = 'dockerhub-creds'  // Your Jenkins DockerHub credentials id
+        DOCKERHUB_CREDENTIALS = 'dockerhub-creds'  // Jenkins DockerHub credentials ID
         IMAGE_NAME = 'manvisupriya/portfolio'
         IMAGE_TAG = 'latest'
     }
@@ -10,7 +10,17 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/1DS22CS222-SUPRIYA/portfolio.git', credentialsId: 'github-token',branch:'main'
+                git url: 'https://github.com/1DS22CS222-SUPRIYA/portfolio.git', credentialsId: 'github-token', branch: 'main'
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: env.DOCKERHUB_CREDENTIALS, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    bat """
+                    echo %PASSWORD% | docker login -u %USERNAME% --password-stdin
+                    """
+                }
             }
         }
 
@@ -18,14 +28,6 @@ pipeline {
             steps {
                 script {
                     docker.build("${env.IMAGE_NAME}:${env.IMAGE_TAG}")
-                }
-            }
-        }
-
-        stage('Docker Login') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: env.DOCKERHUB_CREDENTIALS, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    sh "echo $PASSWORD | docker login -u $USERNAME --password-stdin"
                 }
             }
         }
@@ -40,14 +42,14 @@ pipeline {
 
         stage('Cleanup') {
             steps {
-                sh "docker rmi ${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+                bat "docker rmi ${env.IMAGE_NAME}:${env.IMAGE_TAG}"
             }
         }
     }
 
     post {
         always {
-            sh 'docker logout'
+            bat 'docker logout'
         }
     }
 }
